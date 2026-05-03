@@ -8,29 +8,39 @@ function generate(array: number[]): SortStep[] {
 
     for(let i = 0; i < n - 1; i++){
 
-        for(let j = 0; j < n - 1; j++){
+        let minIndex = i
+
+        for(let j = i + 1; j < n; j++){
 
             steps.push({
                 type: 'compare',
                 array: [...arr],
-                active: [j, j + 1],
+                active: [minIndex, j],
                 sorted: [...sorted]
             })
 
-            if(arr[j] > arr[j + 1]) {
-                ;[arr[j], arr[j + 1]] = [arr[j + 1], arr[j]]
+            if(arr[j] < arr[minIndex]){
 
-                steps.push({
-                    type: 'swap',
-                    array: [...arr],
-                    active: [j, j + 1],
-                    sorted: [...sorted]
-                })
+                minIndex = j
+
             }
 
         }
 
-        sorted.push(n - 1 - i)
+        if(minIndex !== i){
+
+            ;[arr[i], arr[minIndex]] = [arr[minIndex], arr[i]]
+
+            steps.push({
+                type: 'swap',
+                array: [...arr],
+                active: [i, minIndex],
+                sorted: [...sorted]
+            })
+
+        }
+
+        sorted.push(i)
         steps.push({
             type: 'mark-sorted',
             array: [...arr],
@@ -40,7 +50,7 @@ function generate(array: number[]): SortStep[] {
 
     }
 
-    sorted.push(0)
+    sorted.push(n - 1)
     steps.push({
         type: 'mark-sorted',
         array: [...arr],
@@ -49,17 +59,18 @@ function generate(array: number[]): SortStep[] {
     })
 
     return steps
+
 }
 
-export const bubbleSort: AlgorithmMeta = {
-    id: 'bubble',
-    name: 'Bubble Sort',
+export const selectionSort: AlgorithmMeta = {
+    id: 'selection',
+    name: 'Selection Sort',
     timeComplexity: {
-        best: 'O(n)',
+        best: 'O(n²)',
         average: 'O(n²)',
         worst: 'O(n²)',
     },
     spaceComplexity: 'O(1)',
-    description: 'Repeatedly steps through the list, compares adjacent elements and swap them if they are in the wrong order. The largest unsorted element bubbles to its correct position each pass.',
+    description: 'Divides the array into a sorted and unsorted region. On each pass it finds the minimum element in the unsorted region and swaps it into its correct position at the front.',
     generate
 }
