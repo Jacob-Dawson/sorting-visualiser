@@ -1,22 +1,65 @@
 import { useEffect, useState } from "react"
 import { useSortPlayer } from "./hooks/useSortPlayer"
 import BarLayout from "./layouts/BarLayout"
+import SpectrumLayout from "./layouts/SpectrumLayout"
+import RadialLayout from "./layouts/RadialLayout"
+import DotLayout from "./layouts/DotLayout"
+import PixelLayout from "./layouts/PixelLayout"
+import StripLayout from "./layouts/StripLayout"
 import type { AlgorithmMeta } from "./algorithms/types"
 import { ALGORITHMS } from "./algorithms"
+import type { SortStep } from "./algorithms/types"
 
-function randomArray(n: number): number[]{
+type LayoutId = 'bar' | 'spectrum' | 'radial' | 'dot' | 'pixel' | 'strip'
 
-  return Array.from({length: n}, () => Math.floor(Math.random() * 100) + 1)
-
-}
+const LAYOUTS: { 
+  id: LayoutId
+  label: string
+} [] = [
+  { id: 'bar', label: 'bars'},
+  { id: 'spectrum', label: 'Spectrum'},
+  { id: 'radial', label: 'Radial'},
+  { id: 'dot', label: 'Dot'},
+  { id: 'pixel', label: 'Pixel'},
+  { id: 'strip', label: 'Strips'}
+]
 
 const CANVAS_WIDTH = 800
 const CANVAS_HEIGHT = 400
 
+function renderLayout(
+  id: LayoutId,
+  step: SortStep | null,
+  width: number,
+  height: number
+) {
+  switch(id){
+    case 'bar':
+      return <BarLayout step={step} width={width} height={height} />
+    case 'spectrum':
+      return <SpectrumLayout step={step} width={width} height={height} />
+    case 'radial':
+      return <RadialLayout step={step} width={width} height={height}/>  
+    case 'dot':
+      return <DotLayout step={step} width={width} height={height} />
+    case 'pixel':
+      return <PixelLayout step={step} width={width} height={height} />
+    case 'strip':
+      return <StripLayout step={step} width={width} height={height} />
+  }
+}
+
 export default function App(){
 
   const [selectedAlgo, setSelectedAlgo] = useState<AlgorithmMeta>(ALGORITHMS[0])
+  const [selectedLayout, setSelectedLayout] = useState<LayoutId>('bar')
   const { currentStep, isPlaying, isFinished, play, pause, resume, reset} = useSortPlayer()
+
+  function randomArray(n: number): number[]{
+
+    return Array.from({length: n}, () => Math.floor(Math.random() * 100) + 1)
+
+  }
 
   const handleStart = () => {
     const arr = randomArray(60)
@@ -31,12 +74,12 @@ export default function App(){
 
   }
 
-  // auto start when algorithm changes mid session
-  useEffect(() => {
-    if(isFinished){
-      handleStart()
-    }
-  }, [isFinished])
+  const handleLayoutChange = (id: LayoutId) => {
+
+    reset()
+    setSelectedLayout(id)
+
+  }
 
   return (
     <div style={{
@@ -67,6 +110,27 @@ export default function App(){
             <option key={a.id} value={a.id}>{a.name}</option>
           ))}
         </select>
+
+        <div style={{
+          display: 'flex',
+          gap: '0.5rem'
+        }}>
+          {LAYOUTS.map(l => (
+            <button
+              key={l.id}
+              onClick={() => handleLayoutChange(l.id)}
+              style={{
+                padding: '0.5rem 1rem',
+                background: selectedLayout === l.id ? '#3a86ff' : '#444',
+                color: '#fff',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              {l.label}
+            </button>
+          ))}
+        </div>
 
         <button
           onClick={handleStart}
@@ -109,11 +173,7 @@ export default function App(){
       </div>
 
       <div style={{border: '1px solid #333'}}>
-        <BarLayout
-          step={currentStep}
-          width={CANVAS_WIDTH}
-          height={CANVAS_HEIGHT}
-        />
+        {renderLayout(selectedLayout, currentStep, CANVAS_WIDTH, CANVAS_HEIGHT)}
       </div>
 
       <div style={{color: '#888', fontSize: '0.9rem'}}>
